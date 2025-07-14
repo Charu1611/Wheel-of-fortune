@@ -11,7 +11,7 @@ A customizable, generic spin wheel component for React Native. Use it to create 
 ## Installation
 
 ```sh
-npm install your-spinwheel-package
+npm install react-native-weighted-fortune
 ```
 
 ## Usage Example
@@ -19,7 +19,7 @@ npm install your-spinwheel-package
 ```tsx
 import React from 'react';
 import { View, Alert } from 'react-native';
-import { SpinWheel } from 'your-spinwheel-package';
+import { SpinWheel } from 'react-native-weighted-fortune';
 
 const rewards = [
   '₹100 OFF Dominos',

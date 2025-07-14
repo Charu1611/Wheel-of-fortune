@@ -1,5 +1,5 @@
 {
-  "name": "react-native-spinwheel",
+  "name": "react-native-weighted-fortune",
   "version": "1.0.0",
   "description": "A customizable, generic spin wheel component for React Native.",
   "main": "src/index.ts",
@@ -10,7 +10,6 @@
     "type": "git",
     "url": "https://github.com/Charu1611/Wheel-of-fortune.git"
   },
-  "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
