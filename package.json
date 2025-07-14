@@ -7,10 +7,22 @@
   "types": "src/index.ts",
   "keywords": [
     "react-native",
-    "spin wheel",
-    "lucky draw",
-    "wheel of fortune",
-    "component"
+    "spin-wheel",
+    "lucky-draw",
+    "wheel-of-fortune",
+    "reward-wheel",
+    "fortune-wheel",
+    "gamification",
+    "spinner",
+    "react-native-component",
+    "prize-wheel",
+    "game-wheel",
+    "react-native-lucky-draw",
+    "react-native-spin",
+    "wheel",
+    "lucky spin",
+    "animated wheel",
+    "reward spinner"
   ],
   "author": "Charu bansal <bansalc981@gmail.com>",
   "repository": {
