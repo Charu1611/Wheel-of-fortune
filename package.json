@@ -1,11 +1,17 @@
 {
   "name": "react-native-weighted-fortune",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A customizable, generic spin wheel component for React Native.",
   "main": "src/index.ts",
   "license": "MIT",
   "types": "src/index.ts",
-  "keywords": ["react-native", "spin wheel", "lucky draw", "wheel of fortune", "component"],
+  "keywords": [
+    "react-native",
+    "spin wheel",
+    "lucky draw",
+    "wheel of fortune",
+    "component"
+  ],
   "author": "Charu bansal <bansalc981@gmail.com>",
   "repository": {
     "type": "git",
