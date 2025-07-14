@@ -11,3 +11,6 @@ app.json
 *.spec.*
 README.md
 package-lock.json 
+assets/
+docs/
+*.gif
