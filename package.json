@@ -1,6 +1,6 @@
 {
   "name": "react-native-weighted-fortune",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A customizable, generic spin wheel component for React Native.",
   "main": "src/index.ts",
   "types": "src/index.ts",
