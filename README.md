@@ -14,6 +14,8 @@ A customizable, generic spin wheel component for React Native. Use it to create 
 npm install react-native-weighted-fortune
 ```
 
+![Demo GIF](https://github.com/Charu1611/Wheel-of-fortune/raw/main/assets/demo.gif)
+
 ## Usage Example
 
 ```tsx
