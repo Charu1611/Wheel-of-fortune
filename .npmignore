@@ -1,0 +1,13 @@
+android/
+ios/
+__tests__/
+App.js
+index.js
+metro.config.js
+babel.config.js
+Gemfile
+app.json
+*.test.*
+*.spec.*
+README.md
+package-lock.json 

@@ -1,6 +1,16 @@
 {
-  "name": "WheelOfFortune",
-  "version": "0.0.1",
+  "name": "react-native-spinwheel",
+  "version": "1.0.0",
+  "description": "A customizable, generic spin wheel component for React Native.",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/types/index.d.ts",
+  "keywords": ["react-native", "spin wheel", "lucky draw", "wheel of fortune", "component"],
+  "author": "Charu bansal <bansalc981@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/react-native-spinwheel.git"
+  },
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -10,9 +20,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native/new-app-screen": "0.80.1",
     "react": "19.1.0",
     "react-native": "0.80.1",
-    "@react-native/new-app-screen": "0.80.1"
+    "react-native-svg": "^15.12.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
