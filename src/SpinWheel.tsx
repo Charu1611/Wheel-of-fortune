@@ -6,30 +6,51 @@ import {
   Animated,
   Dimensions,
   Easing,
-  ViewStyle,
   TextStyle,
+  ViewStyle,
 } from 'react-native';
-import Svg, { G, Path, Text as SvgText } from 'react-native-svg';
+import Svg, {
+  G,
+  Path,
+  Circle,
+  Text as SvgText,
+  TSpan,
+  Image as SvgImage,
+} from 'react-native-svg';
 
-export interface SpinWheelProps {
-  rewards: string[];
-  probabilities: number[];
-  onSpinEnd?: (reward: string, index: number) => void;
-  wheelSize?: number;
-  numberOfTurns?: number;
-  buttonText?: string;
-  disabled?: boolean;
-  style?: {
-    container?: ViewStyle;
-    wheelContainer?: ViewStyle;
-    wheelWrapper?: ViewStyle;
-    pointer?: ViewStyle;
-    button?: ViewStyle;
-    buttonText?: TextStyle;
-  };
+export interface Slice {
+  label: string;
+  icon?: any;
+  textColor?: string;
+  background?: string;
 }
 
-function weightedRandomChoice(weights: number[]): number {
+export interface SpinWheelProps {
+  rewards: Slice[];
+  probabilities?: number[];
+  onSpinEnd?: (reward: Slice, index: number) => void;
+  wheelSize?: number;
+  numberOfTurns?: number;
+  spinDuration?: number;
+  easing?: (value: number) => number;
+  buttonText?: string;
+  buttonStyle?: ViewStyle;
+  buttonTextStyle?: TextStyle;
+  disabled?: boolean;
+  pointerStyle?: ViewStyle;
+  innerCircleColor?: string;
+  outerCircleColor?: string;
+  centerCircleRadius?: number;
+  imageTextSpacing?: number;
+  lineSpacing?: number;
+  imageSize?: number;
+  imageRadiusFactor?: number;
+}
+
+const AnimatedSvg = Animated.createAnimatedComponent(Svg);
+
+const weightedRandomChoice = (weights: number[] = []) => {
+  if (!weights.length) return Math.floor(Math.random() * weights.length);
   const total = weights.reduce((sum, w) => sum + w, 0);
   const threshold = Math.random() * total;
   let cumulative = 0;
@@ -38,22 +59,72 @@ function weightedRandomChoice(weights: number[]): number {
     if (threshold < cumulative) return i;
   }
   return weights.length - 1;
-}
+};
+
+const polarToCartesian = (cx: number, cy: number, r: number, angle: number) => {
+  const rad = ((angle - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+const describeArc = (
+  cx: number,
+  cy: number,
+  r: number,
+  startAngle: number,
+  endAngle: number,
+) => {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+  return [
+    'M',
+    cx,
+    cy,
+    'L',
+    start.x,
+    start.y,
+    'A',
+    r,
+    r,
+    0,
+    largeArcFlag,
+    0,
+    end.x,
+    end.y,
+    'Z',
+  ].join(' ');
+};
 
 const SpinWheel: React.FC<SpinWheelProps> = ({
   rewards,
   probabilities,
   onSpinEnd,
   wheelSize,
-  numberOfTurns = 4,
-  buttonText = 'Spin the Wheel',
+  numberOfTurns = 5,
+  spinDuration = 5000,
+  easing = Easing.out(Easing.cubic),
+  buttonText = 'SPIN',
+  buttonStyle,
+  buttonTextStyle,
   disabled = false,
-  style = {},
+  pointerStyle,
+  innerCircleColor = '#fff',
+  outerCircleColor = 'rgba(4,24,57,1)',
+  centerCircleRadius = 15,
+  imageTextSpacing = 5,
+  lineSpacing = 20,
+  imageSize = 30,
+  imageRadiusFactor = 0.55,
 }) => {
   const { width } = Dimensions.get('window');
-  const _wheelSize = wheelSize || width * 0.9;
-  const numberOfSegments = rewards.length;
-  const anglePerSegment = 360 / numberOfSegments;
+  const _wheelSize = wheelSize || width * 0.85;
+  const CENTER = _wheelSize / 2;
+  const OUTER_RADIUS = CENTER;
+  const GOLD_RADIUS = OUTER_RADIUS - 4;
+  const INNER_RADIUS = OUTER_RADIUS - 8;
+  const SEGMENT_RADIUS = OUTER_RADIUS - 14;
+  const anglePerSegment = 360 / rewards.length;
+
   const rotateAnimation = useRef(new Animated.Value(0)).current;
   const [isSpinning, setIsSpinning] = useState(false);
 
@@ -61,19 +132,19 @@ const SpinWheel: React.FC<SpinWheelProps> = ({
     if (isSpinning || disabled) return;
     setIsSpinning(true);
     rotateAnimation.setValue(0);
-    const targetSegment = weightedRandomChoice(probabilities);
-    const segmentCenterAngle = targetSegment * anglePerSegment + anglePerSegment / 2;
-    const correctionOffset = 90;
+
+    const targetIndex = weightedRandomChoice(probabilities);
     const targetAngle =
-      numberOfTurns * 360 + (360 - segmentCenterAngle - correctionOffset);
+      numberOfTurns * 360 - targetIndex * anglePerSegment - anglePerSegment / 2;
+
     Animated.timing(rotateAnimation, {
       toValue: targetAngle,
-      duration: 5000,
-      easing: Easing.bezier(0.1, 0.9, 0.2, 1),
+      duration: spinDuration,
+      easing,
       useNativeDriver: true,
     }).start(() => {
       setIsSpinning(false);
-      if (onSpinEnd) onSpinEnd(rewards[targetSegment], targetSegment);
+      onSpinEnd && onSpinEnd(rewards[targetIndex], targetIndex);
     });
   };
 
@@ -82,119 +153,172 @@ const SpinWheel: React.FC<SpinWheelProps> = ({
     outputRange: ['0deg', '360deg'],
   });
 
-  const renderWheelSegments = () => {
-    const radius = _wheelSize / 2;
-    const segments = [];
-    for (let i = 0; i < numberOfSegments; i++) {
-      const startAngle = (i * anglePerSegment * Math.PI) / 180;
-      const endAngle = ((i + 1) * anglePerSegment * Math.PI) / 180;
-      const x1 = radius + radius * Math.cos(startAngle);
-      const y1 = radius + radius * Math.sin(startAngle);
-      const x2 = radius + radius * Math.cos(endAngle);
-      const y2 = radius + radius * Math.sin(endAngle);
-      const largeArc = anglePerSegment > 180 ? 1 : 0;
-      const fillColor = i % 2 === 0 ? '#a26cf2' : '#fff';
-      segments.push(
-        <G key={`segment-${i}`}>
+  const renderSegments = () => {
+    let startAngle = 0;
+    return rewards.map((slice:any, i:any) => {
+      const endAngle = startAngle + anglePerSegment;
+      const labelAngle = startAngle + anglePerSegment / 2;
+
+      const path = describeArc(
+        CENTER,
+        CENTER,
+        SEGMENT_RADIUS,
+        startAngle,
+        endAngle,
+      );
+
+      const textPos = polarToCartesian(
+        CENTER,
+        CENTER,
+        SEGMENT_RADIUS * 0.8,
+        labelAngle,
+      );
+      const imagePos = polarToCartesian(
+        CENTER,
+        CENTER,
+        SEGMENT_RADIUS * imageRadiusFactor,
+        labelAngle,
+      );
+
+      const lines = slice.label.match(/.{1,12}/g) || [];
+      startAngle += anglePerSegment;
+
+      return (
+        <G key={i}>
           <Path
-            d={`M${radius},${radius} L${x1},${y1} A${radius},${radius} 0 ${largeArc} 1 ${x2},${y2} Z`}
-            fill={fillColor}
-            stroke="#000"
+            d={path}
+            fill={slice.background || (i % 2 === 0 ? '#a26cf2' : '#fff')}
+            stroke="#222"
             strokeWidth={2}
           />
+
+          {slice.icon && (
+            <SvgImage
+              href={slice.icon}
+              x={imagePos.x - imageSize / 2}
+              y={imagePos.y - imageSize / 2}
+              width={imageSize}
+              height={imageSize}
+              transform={`rotate(${labelAngle}, ${imagePos.x}, ${imagePos.y})`}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          )}
+
           <SvgText
-            x={radius + radius * 0.6 * Math.cos((startAngle + endAngle) / 2)}
-            y={radius + radius * 0.6 * Math.sin((startAngle + endAngle) / 2)}
-            fill="#000"
-            fontSize="12"
+            x={textPos.x}
+            y={textPos.y - imageTextSpacing}
+            fill={slice.textColor || '#fff'}
+            fontSize="16"
             fontWeight="bold"
             textAnchor="middle"
             alignmentBaseline="middle"
-            transform={`rotate(${((startAngle + endAngle) / 2) * (180 / Math.PI)}, ${radius + radius * 0.6 * Math.cos((startAngle + endAngle) / 2)}, ${radius + radius * 0.6 * Math.sin((startAngle + endAngle) / 2)})`}
+            transform={`rotate(${labelAngle}, ${textPos.x}, ${textPos.y})`}
           >
-            {rewards[i]}
+            {lines.map((line, index) => (
+              <TSpan
+                key={index}
+                x={textPos.x}
+                dy={index === 0 ? '0' : lineSpacing}
+              >
+                {line}
+              </TSpan>
+            ))}
           </SvgText>
         </G>
       );
-    }
-    return segments;
+    });
   };
 
   return (
-    <View style={[styles.container, style.container]}>
-      <View style={[styles.wheelContainer, style.wheelContainer]}>
-        <Animated.View
-          style={[
-            styles.wheelWrapper,
-            { width: _wheelSize, height: _wheelSize, borderRadius: _wheelSize / 2 },
-            style.wheelWrapper,
-            { transform: [{ rotate: interpolatedRotate }] },
-          ]}
-        >
-          <Svg width={_wheelSize} height={_wheelSize} viewBox={`0 0 ${_wheelSize} ${_wheelSize}`}>
-            {renderWheelSegments()}
-          </Svg>
-        </Animated.View>
-        <View style={[styles.pointer, style.pointer]} />
+    <View style={styles.container}>
+      <View>
+        <View style={styles.wheelWrapper}>
+          <AnimatedSvg
+            width={_wheelSize}
+            height={_wheelSize}
+            viewBox={`0 0 ${_wheelSize} ${_wheelSize}`}
+            style={{ transform: [{ rotate: interpolatedRotate }] }}
+          >
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={GOLD_RADIUS}
+              fill={outerCircleColor}
+            />
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={INNER_RADIUS}
+              fill={innerCircleColor}
+            />
+            <G>{renderSegments()}</G>
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={centerCircleRadius}
+              fill="#000"
+              stroke="#222"
+              strokeWidth={2}
+            />
+            <Circle
+              cx={CENTER}
+              cy={CENTER}
+              r={centerCircleRadius}
+              fill="#FFD700"
+              stroke="#222"
+              strokeWidth={2}
+            />
+          </AnimatedSvg>
+        </View>
+
+        <View style={[styles.notch, pointerStyle]} />
       </View>
+
       <TouchableOpacity
-        style={[styles.button, style.button]}
+        style={[styles.button, buttonStyle]}
         onPress={spin}
         disabled={isSpinning || disabled}
       >
-        <Animated.Text style={[styles.buttonText, style.buttonText]}>{buttonText}</Animated.Text>
+        <Animated.Text style={[styles.buttonText, buttonTextStyle]}>
+          {isSpinning ? 'Spinning...' : buttonText}
+        </Animated.Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    paddingTop: 20,
-    backgroundColor: 'transparent',
-  },
-  wheelContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  wheelWrapper: {
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pointer: {
+  container: { alignItems: 'center', marginTop: 30 },
+  wheelWrapper: { justifyContent: 'center', alignItems: 'center' },
+  notch: {
     position: 'absolute',
-    top: -10,
+    top: 0,
     width: 0,
     height: 0,
-    borderLeftWidth: 16,
-    borderRightWidth: 16,
-    borderBottomWidth: 24,
+    borderLeftWidth: 18,
+    borderRightWidth: 18,
+    borderBottomWidth: 28,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: 'black',
+    borderBottomColor: '#000',
+    alignSelf: 'center',
     zIndex: 10,
     transform: [{ rotate: '180deg' }],
   },
   button: {
     marginTop: 30,
-    backgroundColor: '#FFD700',
-    paddingVertical: 14,
-    paddingHorizontal: 30,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 4,
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    borderRadius: 50,
+    elevation: 6,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
+    letterSpacing: 1,
   },
 });
 
-export default SpinWheel; 
+export default SpinWheel;
