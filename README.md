@@ -100,7 +100,7 @@ export default function App() {
 | imageRadiusFactor  | `number`                    | No       | 0.55                       | Relative distance of icon from center (0 = center, 1 = edge).                         |
 | imageTextSpacing   | `number`                    | No       | 5                          | Vertical spacing between icon and text label.                                         |
 | lineSpacing        | `number`                    | No       | 20                         | Vertical spacing between multiple lines of text.                                      |
-                                                    |
+
 
 ---
 
